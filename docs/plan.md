@@ -56,9 +56,9 @@ Go only has max 64bits integer so we can depend on 64 bit integer + 32 bit integ
 
 - 18 bits - bottom center and right small games
 - 9 bits - small game wins
-- 1 bit - win
 
 ## Game Metadata
 
 - 9 bits - next small game zone
+- 9 bits - small game wins
 - 1 bit - next player

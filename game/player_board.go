@@ -9,10 +9,11 @@ type Printer interface {
 }
 
 type PlayerBoard interface {
-	// Should be between 0 to 8
 	IsSmallWin(boardZone uint8) bool
 	IsWin() bool
-	UpdateWinMetadata(boardZone uint8)
+	SetWinMetadata(boardZone uint8)
+	GetSmallBoard(boardZone uint8) uint64
+	PlaySmallBoard(boardZone, position uint8)
 }
 
 type Player struct {
@@ -20,24 +21,33 @@ type Player struct {
 	Hi uint64
 }
 
-func NewPlayerBoard(player uint8) PlayerBoard {
-	return &Player{}
+func NewPlayer(Lo, Hi uint64) Player {
+	return Player{Lo: Lo, Hi: Hi}
 }
 
-func (pb *Player) UpdateWinMetadata(boardZone uint8) {
-	pb.Hi |= 0b1 << ((smallGameSize * 2) + uint64(boardZone))
+func (pb *Player) GetSmallBoard(boardZone uint8) uint64 {
+	if boardZone <= 6 {
+		// In low bits
+		return pb.Lo >> uint64(boardZone*uint8(smallGameSize))
+	}
+
+	// In high bits
+	return pb.Hi >> uint64((boardZone-7)*uint8(smallGameSize))
+}
+
+func (pb *Player) PlaySmallBoard(boardZone, position uint8) {
+	if boardZone <= 6 {
+		// In low bits
+		pb.Lo = pb.Lo | (0b1 << (smallGameSize*uint64(boardZone) + uint64(position)))
+		return
+	}
+
+	// In high bits
+	pb.Hi = pb.Hi | (0b1 << (smallGameSize*uint64(boardZone-7) + uint64(position)))
 }
 
 func (pb *Player) IsSmallWin(boardZone uint8) bool {
-	var forCheck uint64
-	// Low for if between 0 and 6 else High
-	if boardZone <= 6 {
-		forCheck = pb.Lo >> uint64(boardZone*uint8(smallGameSize))
-	} else {
-		forCheck = pb.Hi >> uint64((boardZone-7)*uint8(smallGameSize))
-	}
-
-	return CheckWin(forCheck)
+	return CheckWin(pb.GetSmallBoard(boardZone))
 }
 
 func CheckWin(check uint64) bool {
@@ -70,4 +80,8 @@ func (pb *Player) IsWin() bool {
 	toCheck := pb.Hi >> (smallGameSize * 2)
 
 	return CheckWin(toCheck)
+}
+
+func (pb *Player) SetWinMetadata(boardZone uint8) {
+	pb.Hi |= 0b1 << ((smallGameSize * 2) + uint64(boardZone))
 }

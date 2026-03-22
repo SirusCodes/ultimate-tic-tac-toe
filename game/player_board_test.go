@@ -13,38 +13,87 @@ func getPlayerBoard(lo, hi uint64) *game.Player {
 	}
 }
 
-func TestUpdateWinMetadata(t *testing.T) {
+func TestGetSmallBoard(t *testing.T) {
 	tt := []struct {
-		Hi        uint64
+		lo        uint64
+		hi        uint64
 		boardZone uint8
 		expected  uint64
 	}{
 		{
-			Hi:        0b000000001 << 18,
-			boardZone: 1,
-			expected:  0b000000011 << 18,
-		},
-		{
-			Hi:        0b000000001 << 18,
-			boardZone: 2,
-			expected:  0b101 << 18,
-		},
-		{
-			Hi:        0b000000001 << 18,
-			boardZone: 8,
-			expected:  0b100000001 << 18,
-		},
-		{
-			Hi:        0b000000000,
+			lo:        0b111000,
 			boardZone: 0,
-			expected:  0b000000001 << 18,
+			expected:  0b111000,
+		},
+		{
+			lo:        0b111000 << 9,
+			boardZone: 1,
+			expected:  0b111000,
+		},
+		{
+			hi:        0b111000,
+			boardZone: 7,
+			expected:  0b111000,
+		},
+		{
+			hi:        0b111 << 9,
+			boardZone: 8,
+			expected:  0b111,
 		},
 	}
 
 	for i, test := range tt {
-		player := getPlayerBoard(0, test.Hi)
-		if player.UpdateWinMetadata(test.boardZone); player.Hi != test.expected {
-			t.Fatalf("test failed for %+v (%d), expected: %v got: %v", player, i, test.expected, player.Hi)
+		player := getPlayerBoard(test.lo, test.hi)
+		if board := player.GetSmallBoard(test.boardZone); board != test.expected {
+			t.Fatalf("test failed for %+v (%d), expected: %b got: %b", player, i, test.expected, player.Hi)
+		}
+	}
+}
+
+func TestPlaySmallBoard(t *testing.T) {
+	tt := []struct {
+		lo         uint64
+		hi         uint64
+		boardZone  uint8
+		position   uint8
+		expectedLo uint64
+		expectedHi uint64
+	}{
+		{
+			lo:         0b111000,
+			boardZone:  0,
+			position:   0,
+			expectedLo: 0b111001,
+		},
+		{
+			lo:         0b111000000 << 9,
+			boardZone:  1,
+			position:   1,
+			expectedLo: 0b111000010 << 9,
+		},
+		{
+			hi:         0b111000000,
+			boardZone:  7,
+			position:   0,
+			expectedHi: 0b111000001,
+		},
+		{
+			hi:         0b111000000 << 9,
+			boardZone:  8,
+			position:   1,
+			expectedHi: 0b111000010 << 9,
+		},
+	}
+
+	for i, test := range tt {
+		player := getPlayerBoard(test.lo, test.hi)
+		player.PlaySmallBoard(test.boardZone, test.position)
+		if player.Lo != test.expectedLo {
+			t.Fatalf("test failed for %+v (%d), expectedLo: %b got: %b", player, i, test.expectedLo, player.Lo)
+		}
+
+		if player.Hi != test.expectedHi {
+			t.Fatalf("test failed for %+v (%d), expectedHi: %b got: %b", player, i, test.expectedHi, player.Hi)
 		}
 	}
 }
@@ -169,6 +218,34 @@ func TestCheckWin(t *testing.T) {
 	for _, test := range tt {
 		if val := game.CheckWin(uint64(test.test)); val != test.answer {
 			t.Fatalf("test failed for %b, expected: %v got: %v", test.test, test.answer, val)
+		}
+	}
+}
+
+func TestSetWinMetadata(t *testing.T) {
+	tt := []struct {
+		Hi         uint64
+		boardZone  uint8
+		expectedHi uint64
+	}{
+		{
+			Hi:         0b111000000 << (9 * 2),
+			boardZone:  4,
+			expectedHi: 0b111010000 << (9 * 2),
+		},
+		{
+			Hi:         0b110100000 << (9 * 2),
+			boardZone:  0,
+			expectedHi: 0b110100001 << (9 * 2),
+		},
+	}
+
+	for i, test := range tt {
+		player := getPlayerBoard(0, test.Hi)
+		player.SetWinMetadata(test.boardZone)
+
+		if player.Hi != test.expectedHi {
+			t.Fatalf("test failed for %+v (%d), expected: %b got: %b", player, i, test.expectedHi, player.Hi)
 		}
 	}
 }
