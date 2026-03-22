@@ -1,4 +1,4 @@
-package game
+package player
 
 const (
 	smallGameSize uint64 = 9

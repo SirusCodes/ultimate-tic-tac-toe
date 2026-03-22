@@ -1,13 +1,13 @@
-package game_test
+package player_test
 
 import (
 	"testing"
 
-	"github.com/SirusCodes/9x9-analysis/game"
+	"github.com/SirusCodes/9x9-analysis/player"
 )
 
-func getPlayerBoard(lo, hi uint64) *game.Player {
-	return &game.Player{
+func getPlayerBoard(lo, hi uint64) *player.Player {
+	return &player.Player{
 		Lo: lo,
 		Hi: hi,
 	}
@@ -216,7 +216,7 @@ func TestCheckWin(t *testing.T) {
 	}
 
 	for _, test := range tt {
-		if val := game.CheckWin(uint64(test.test)); val != test.answer {
+		if val := player.CheckWin(uint64(test.test)); val != test.answer {
 			t.Fatalf("test failed for %b, expected: %v got: %v", test.test, test.answer, val)
 		}
 	}
