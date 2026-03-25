@@ -50,6 +50,48 @@ func TestGetSmallBoard(t *testing.T) {
 	}
 }
 
+func TestHasPlayed(t *testing.T) {
+	tt := []struct {
+		lo        uint64
+		hi        uint64
+		boardZone uint8
+		position  uint8
+		expected  bool
+	}{
+		{
+			lo:        0b111001,
+			boardZone: 0,
+			position:  0,
+			expected:  true,
+		},
+		{
+			lo:        0b111000000 << 9,
+			boardZone: 1,
+			position:  2,
+			expected:  false,
+		},
+		{
+			hi:        0b111000000,
+			boardZone: 7,
+			position:  1,
+			expected:  false,
+		},
+		{
+			hi:        0b111000010 << 9,
+			boardZone: 8,
+			position:  1,
+			expected:  true,
+		},
+	}
+
+	for i, test := range tt {
+		player := getPlayerBoard(test.lo, test.hi)
+		if val := player.HasPlayed(test.boardZone, test.position); val != test.expected {
+			t.Fatalf("test failed for %+v (%d), expected: %v got: %v", player, i, test.expected, val)
+		}
+	}
+}
+
 func TestPlaySmallBoard(t *testing.T) {
 	tt := []struct {
 		lo         uint64
@@ -87,7 +129,7 @@ func TestPlaySmallBoard(t *testing.T) {
 
 	for i, test := range tt {
 		player := getPlayerBoard(test.lo, test.hi)
-		player.PlaySmallBoard(test.boardZone, test.position)
+		player.Play(test.boardZone, test.position)
 		if player.Lo != test.expectedLo {
 			t.Fatalf("test failed for %+v (%d), expectedLo: %b got: %b", player, i, test.expectedLo, player.Lo)
 		}

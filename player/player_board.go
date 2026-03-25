@@ -13,7 +13,7 @@ type PlayerBoard interface {
 	IsWin() bool
 	SetWinMetadata(boardZone uint8)
 	GetSmallBoard(boardZone uint8) uint64
-	PlaySmallBoard(boardZone, position uint8)
+	Play(boardZone, position uint8)
 }
 
 type Player struct {
@@ -35,7 +35,19 @@ func (pb *Player) GetSmallBoard(boardZone uint8) uint64 {
 	return pb.Hi >> uint64((boardZone-7)*uint8(smallGameSize))
 }
 
-func (pb *Player) PlaySmallBoard(boardZone, position uint8) {
+func (p *Player) HasPlayed(boardZone, position uint8) bool {
+	if boardZone <= 6 {
+		// In low bits
+		shifted := p.Lo >> (smallGameSize*uint64(boardZone) + uint64(position))
+		return (shifted & 1) == 1
+	}
+
+	// In high bits
+	shifted := p.Hi >> (smallGameSize*uint64(boardZone-7) + uint64(position))
+	return (shifted & 1) == 1
+}
+
+func (pb *Player) Play(boardZone, position uint8) {
 	if boardZone <= 6 {
 		// In low bits
 		pb.Lo = pb.Lo | (0b1 << (smallGameSize*uint64(boardZone) + uint64(position)))
