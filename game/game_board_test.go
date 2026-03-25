@@ -77,7 +77,8 @@ func TestPlayMove(t *testing.T) {
 			t.Fatalf("didn't update the next play zone for %d index", i)
 		}
 
-		if g.GetPlayer() != &g.X {
+		plyr, _ := g.GetPlayers()
+		if plyr != &g.X {
 			t.Fatalf("didn't update the next player for %d index", i)
 		}
 	}
@@ -183,8 +184,8 @@ func TestGetPlayer(t *testing.T) {
 	o := player.NewPlayer(0, 0)
 	g := game.NewGame(x, o, xTurnMetadata)
 
-	if val := g.GetPlayer(); *val != x {
-		t.Fatalf("incorrect user; expected: %v, got: %v", &x, val)
+	if plyr, opp := g.GetPlayers(); *plyr != x && *opp != o {
+		t.Fatalf("incorrect user; expected: %+v and %+v, got: %+v and %+v", x, o, plyr, opp)
 	}
 }
 

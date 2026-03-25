@@ -46,8 +46,9 @@ func NewGame(X, O player.Player, Metadata uint16) Game {
 
 func (g *Game) GetNextValidMovesSeq() iter.Seq[NextMove] {
 	currSmallGameZone := g.GetNextSmallGame()
+	canPlayAnywhere := currSmallGameZone != 9 && !g.IsSmallGameWin(currSmallGameZone)
 
-	if currSmallGameZone != 9 && !g.IsSmallGameWin(currSmallGameZone) {
+	if canPlayAnywhere {
 		return g.getValidMovesInBoardZoneSeq(currSmallGameZone)
 	}
 
@@ -130,18 +131,14 @@ func (g *Game) IsSmallGameWin(boardZone uint8) bool {
 	return (allWins>>boardZone)&1 == 1
 }
 
-func (g *Game) GetPlayer() *player.Player {
+func (g *Game) GetPlayers() (plyr *player.Player, oppo *player.Player) {
 	isX := (g.Metadata>>NextPlayerMetaPos)&1 == 1
 
-	var plyr *player.Player
-
 	if isX {
-		plyr = &g.X
-	} else {
-		plyr = &g.O
+		return &g.X, &g.O
 	}
 
-	return plyr
+	return &g.O, &g.X
 }
 
 func (g *Game) ChangePlayer() {
