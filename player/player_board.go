@@ -4,18 +4,6 @@ const (
 	smallGameSize uint64 = 9
 )
 
-type Printer interface {
-	Print()
-}
-
-type PlayerBoard interface {
-	IsSmallWin(boardZone uint8) bool
-	IsWin() bool
-	SetWinMetadata(boardZone uint8)
-	GetSmallBoard(boardZone uint8) uint64
-	Play(boardZone, position uint8)
-}
-
 type Player struct {
 	Lo uint64
 	Hi uint64

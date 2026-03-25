@@ -8,7 +8,7 @@ import (
 	"github.com/SirusCodes/9x9-analysis/player"
 )
 
-const xTurnMetadata uint32 = 1 << game.NextPlayerMetaPos
+const xTurnMetadata uint16 = 1 << game.NextPlayerMetaPos
 
 func TestGetNextValidMovesSeq(t *testing.T) {
 	g := getGameWithMetadata(0)
@@ -43,7 +43,8 @@ func TestGetNextValidMovesSeq(t *testing.T) {
 	if !g.O.IsSmallWin(0) {
 		t.Fatal("not win for O verify tests!")
 	}
-	g.UpdateSmallGameWin(&g.O, 0)
+
+	g.O.SetWinMetadata(0)
 
 	g.PlayMove(&g.X, 7, 0)
 
@@ -88,7 +89,7 @@ func TestEvaluation(t *testing.T) {
 
 func TestGetNextSmallGame(t *testing.T) {
 	tt := []struct {
-		metadata uint32
+		metadata uint16
 		expected uint8
 	}{
 		{
@@ -115,9 +116,9 @@ func TestGetNextSmallGame(t *testing.T) {
 
 func TestUpdateNextGameZone(t *testing.T) {
 	tt := []struct {
-		metadata  uint32
+		metadata  uint16
 		boardZone uint8
-		expected  uint32
+		expected  uint16
 	}{
 		{
 			metadata:  0b000000000,
@@ -140,77 +141,39 @@ func TestUpdateNextGameZone(t *testing.T) {
 }
 
 func TestIsSmallGameWin(t *testing.T) {
+	const playerWinMetadata int = 18
+
 	tt := []struct {
-		metadata  uint32
-		boardZone uint8
-		expected  bool
+		playerMetadata uint64
+		boardZone      uint8
+		expected       bool
 	}{
 		{
-			metadata:  0b000000001 << game.GameStateMetaPos,
-			boardZone: 0,
-			expected:  true,
+			playerMetadata: 0b1 << playerWinMetadata,
+			boardZone:      0,
+			expected:       true,
 		},
 		{
-			metadata:  0b001000000 << game.GameStateMetaPos,
-			boardZone: 3,
-			expected:  false,
+			playerMetadata: 0b1 << playerWinMetadata,
+			boardZone:      3,
+			expected:       false,
 		},
 		{
-			metadata:  0b111111111 << game.GameStateMetaPos,
-			boardZone: 8,
-			expected:  true,
+			playerMetadata: 0b100000000 << playerWinMetadata,
+			boardZone:      8,
+			expected:       true,
 		},
 		{
-			metadata:  0b011111111 << game.GameStateMetaPos,
-			boardZone: 8,
-			expected:  false,
+			playerMetadata: 0b011111111 << playerWinMetadata,
+			boardZone:      8,
+			expected:       false,
 		},
 	}
 
 	for i, test := range tt {
-		g := getGameWithMetadata(test.metadata)
+		g := getGameWithPlayers(player.NewPlayer(0, test.playerMetadata), player.NewPlayer(0, 0))
 		if val := g.IsSmallGameWin(test.boardZone); val != test.expected {
 			t.Fatalf("win zones not correct (%d) expected: %v, got: %v", i, test.expected, val)
-		}
-	}
-}
-
-func TestUpdateSmallGameWin(t *testing.T) {
-	tt := []struct {
-		metadata  uint32
-		boardZone uint8
-		expected  uint32
-	}{
-		{
-			metadata:  0b000000000 << game.GameStateMetaPos,
-			boardZone: 0,
-			expected:  0b000000001 << game.GameStateMetaPos,
-		},
-		{
-			metadata:  0b000000000 << game.GameStateMetaPos,
-			boardZone: 3,
-			expected:  0b000001000 << game.GameStateMetaPos,
-		},
-		{
-			metadata:  0b000000000 << game.GameStateMetaPos,
-			boardZone: 8,
-			expected:  0b100000000 << game.GameStateMetaPos,
-		},
-		{
-			metadata:  0b000001000 << game.GameStateMetaPos,
-			boardZone: 4,
-			expected:  0b000011000 << game.GameStateMetaPos,
-		},
-	}
-
-	for i, test := range tt {
-		g := getGameWithMetadata(test.metadata)
-		p := g.GetPlayer()
-		if g.UpdateSmallGameWin(p, test.boardZone); g.Metadata != test.expected {
-			t.Fatalf("win zones not updated (%d) expected: %b, got: %b", i, test.expected, g.Metadata)
-		}
-		if p.IsSmallWin(test.boardZone) {
-			t.Fatalf("player win not updated (%d)", i)
 		}
 	}
 }
@@ -218,7 +181,6 @@ func TestUpdateSmallGameWin(t *testing.T) {
 func TestGetPlayer(t *testing.T) {
 	x := player.NewPlayer(1, 0)
 	o := player.NewPlayer(0, 0)
-	const xTurnMetadata uint32 = 1 << game.NextPlayerMetaPos
 	g := game.NewGame(x, o, xTurnMetadata)
 
 	if val := g.GetPlayer(); *val != x {
@@ -240,6 +202,10 @@ func TestChangePlayer(t *testing.T) {
 	}
 }
 
+func getGameWithPlayers(x, o player.Player) game.Game {
+	return game.NewGame(x, o, 0)
+}
+
 func getGame() game.Game {
 	x := player.NewPlayer(0, 0)
 	o := player.NewPlayer(0, 0)
@@ -252,7 +218,7 @@ func getGame() game.Game {
 	return game.NewGame(x, o, xTurnMetadata)
 }
 
-func getGameWithMetadata(metadata uint32) game.Game {
+func getGameWithMetadata(metadata uint16) game.Game {
 	x := player.NewPlayer(0, 0)
 	o := player.NewPlayer(0, 0)
 

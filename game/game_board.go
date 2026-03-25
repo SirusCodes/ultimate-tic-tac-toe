@@ -7,10 +7,9 @@ import (
 )
 
 const (
-	GameStateMetaPos  uint32 = 9
-	NextPlayerMetaPos uint32 = 18
+	NextPlayerMetaPos uint32 = 9
 	FilledBoard       uint64 = 0b111111111
-	EmptyLowerBits    uint32 = 0b11111111111111111111111000000000
+	EmptyLowerBits    uint16 = 0b1111111000000000
 )
 
 type EvaluationScore int
@@ -23,35 +22,21 @@ const (
 	BigWin
 )
 
-type GameBoard interface {
-	GetNextValidMoves() []GameBoard
-	// Value will be between 0 to 8, 9 means anywhere
-	GetNextSmallGame() uint8
-	UpdateNextGameZone(smallGameZone uint8)
-
-	UpdateSmallGameWin(boardZone uint8)
-	GetSmallGameWin(boardZone uint8) bool
-	// true is X and false is O
-	GetPlayer() bool
-	ChangePlayer()
-}
-
 type Game struct {
 	X player.Player
 	O player.Player
 
 	// Stores
 	// 9 bits - next small game zone
-	// 9 bits - small game wins
 	// 1 bit - next player
-	Metadata uint32
+	Metadata uint16
 }
 
 type NextMove struct {
 	BoardZone, Position uint8
 }
 
-func NewGame(X, O player.Player, Metadata uint32) Game {
+func NewGame(X, O player.Player, Metadata uint16) Game {
 	return Game{
 		X:        player.NewPlayer(X.Lo, X.Hi),
 		O:        player.NewPlayer(O.Lo, O.Hi),
@@ -115,7 +100,7 @@ func (g *Game) Evaluation(plyr *player.Player, boardZone uint8) int {
 
 	// Check Wins
 	if plyr.IsSmallWin(boardZone) {
-		g.UpdateSmallGameWin(plyr, boardZone)
+		plyr.SetWinMetadata(boardZone)
 		if plyr.IsWin() {
 		}
 	}
@@ -141,15 +126,8 @@ func (g *Game) UpdateNextGameZone(smallGameZone uint8) {
 }
 
 func (g *Game) IsSmallGameWin(boardZone uint8) bool {
-	gameStateMeta := g.Metadata >> (uint8(GameStateMetaPos) + boardZone)
-
-	return gameStateMeta&1 == 1
-}
-
-func (g *Game) UpdateSmallGameWin(plyr *player.Player, boardZone uint8) {
-	plyr.SetWinMetadata(boardZone)
-	const setWinBoard uint32 = 0b1 << GameStateMetaPos
-	g.Metadata |= (setWinBoard << boardZone)
+	allWins := (g.O.Hi | g.X.Hi) >> 18
+	return (allWins>>boardZone)&1 == 1
 }
 
 func (g *Game) GetPlayer() *player.Player {
@@ -167,6 +145,6 @@ func (g *Game) GetPlayer() *player.Player {
 }
 
 func (g *Game) ChangePlayer() {
-	const flipNextPlayer uint32 = 1 << NextPlayerMetaPos
+	const flipNextPlayer uint16 = 1 << NextPlayerMetaPos
 	g.Metadata ^= flipNextPlayer
 }
