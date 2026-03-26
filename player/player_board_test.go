@@ -140,70 +140,6 @@ func TestPlay(t *testing.T) {
 	}
 }
 
-func TestIsWin(t *testing.T) {
-	tt := []struct {
-		Hi     uint64
-		answer bool
-	}{
-		{
-			Hi:     uint64(0b111000000 << (9 * 2)),
-			answer: true,
-		},
-		{
-			Hi:     uint64(0b110100000 << (9 * 2)),
-			answer: false,
-		},
-	}
-
-	for i, test := range tt {
-		player := getPlayerBoard(0, test.Hi)
-		if val := player.IsWin(); val != test.answer {
-			t.Fatalf("test failed for %+v (%d), expected: %v got: %v", player, i, test.answer, val)
-		}
-	}
-}
-
-func TestIsSmallWin(t *testing.T) {
-	tt := []struct {
-		Lo     uint64
-		Hi     uint64
-		zone   uint8
-		answer bool
-	}{
-		{
-			Lo:     0b000111,
-			zone:   0,
-			answer: true,
-		},
-		{
-			Hi:     0b10010001,
-			zone:   7,
-			answer: false,
-		},
-		{
-			Hi:     0b001001001,
-			zone:   7,
-			answer: true,
-		},
-		{
-			zone:   0,
-			answer: false,
-		},
-		{
-			Hi:     0b001001001000000000,
-			zone:   8,
-			answer: true,
-		},
-	}
-
-	for i, test := range tt {
-		player := getPlayerBoard(test.Lo, test.Hi)
-		if val := player.IsSmallWin(test.zone); val != test.answer {
-			t.Fatalf("test failed for %+v (%d), expected: %v got: %v", player, i, test.answer, val)
-		}
-	}
-}
-
 func TestSetWinMetadata(t *testing.T) {
 	tt := []struct {
 		Hi         uint64
@@ -228,6 +164,30 @@ func TestSetWinMetadata(t *testing.T) {
 
 		if player.Hi != test.expectedHi {
 			t.Fatalf("test failed for %+v (%d), expected: %064b got: %064b", player, i, test.expectedHi, player.Hi)
+		}
+	}
+}
+
+func TestGetWinMetadata(t *testing.T) {
+	tt := []struct {
+		Hi               uint64
+		expectedMetadata uint16
+	}{
+		{
+			Hi:               0b111000000 << (9 * 2),
+			expectedMetadata: 0b111000000,
+		},
+		{
+			Hi:               0b110100000 << (9 * 2),
+			expectedMetadata: 0b110100000,
+		},
+	}
+
+	for i, test := range tt {
+		player := getPlayerBoard(0, test.Hi)
+
+		if val := player.GetWinMetadata(); val != test.expectedMetadata {
+			t.Fatalf("test failed for %+v (%d), expected: %016b got: %016b", player, i, test.expectedMetadata, val)
 		}
 	}
 }

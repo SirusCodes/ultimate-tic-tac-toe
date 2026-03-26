@@ -1,7 +1,5 @@
 package player
 
-import "github.com/SirusCodes/9x9-analysis/utils"
-
 const (
 	smallGameSize uint64 = 9
 )
@@ -48,16 +46,10 @@ func (pb *Player) Play(boardZone, position uint8) {
 	pb.Hi = pb.Hi | (0b1 << (smallGameSize*uint64(boardZone-7) + uint64(position)))
 }
 
-func (pb *Player) IsSmallWin(boardZone uint8) bool {
-	return utils.CheckWin(uint16(pb.GetSmallBoard(boardZone)))
-}
-
-func (pb *Player) IsWin() bool {
-	toCheck := pb.Hi >> (smallGameSize * 2)
-
-	return utils.CheckWin(uint16(toCheck))
-}
-
 func (pb *Player) SetWinMetadata(boardZone uint8) {
 	pb.Hi |= 0b1 << ((smallGameSize * 2) + uint64(boardZone))
+}
+
+func (pb *Player) GetWinMetadata() uint16 {
+	return uint16(pb.Hi >> (smallGameSize * 2))
 }

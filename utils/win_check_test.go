@@ -10,7 +10,7 @@ func TestPartialWins(t *testing.T) {
 	tt := []struct {
 		player   uint16
 		opponent uint16
-		answer   uint8
+		answer   int
 	}{
 		{
 			player: 0b000000000,

@@ -4,6 +4,7 @@ import (
 	"iter"
 
 	"github.com/SirusCodes/9x9-analysis/player"
+	"github.com/SirusCodes/9x9-analysis/utils"
 )
 
 const (
@@ -13,18 +14,15 @@ const (
 )
 
 const (
-	smallEdge               = .5
-	smallCorner             = 1
-	smallCenter             = 2
-	bigEdgeWin              = 3
-	smallPartialWin         = 4
-	sendOpponentToFreeBoard = -4
-	bigCornerWin            = 5
-	smallOpponentDefend     = 5
-	smallWin                = 8
-	bigCenter               = 10
+	edge                    = 1
+	corner                  = 2
+	center                  = 3
+	smallPartialWin         = 5
+	smallWin                = 10
+	smallOpponentWin        = -12
+	sendOpponentToFreeBoard = -10
 	bigPartialWin           = 50
-	bigOpponentDefend       = 60
+	bigOpponentWin          = -60
 	bigWin                  = 1000
 )
 
@@ -38,7 +36,7 @@ type Game struct {
 	Metadata uint16
 }
 
-type NextMove struct {
+type Move struct {
 	BoardZone, Position uint8
 }
 
@@ -50,15 +48,14 @@ func NewGame(X, O player.Player, Metadata uint16) Game {
 	}
 }
 
-func (g *Game) GetNextValidMovesSeq() iter.Seq[NextMove] {
+func (g *Game) GetNextValidMovesSeq() iter.Seq[Move] {
 	currSmallGameZone := g.GetNextSmallGame()
-	canPlayAnywhere := currSmallGameZone != 9 && !g.IsSmallGameWin(currSmallGameZone)
 
-	if canPlayAnywhere {
+	if !g.canPlayAnywhere(currSmallGameZone) {
 		return g.getValidMovesInBoardZoneSeq(currSmallGameZone)
 	}
 
-	return func(yield func(NextMove) bool) {
+	return func(yield func(Move) bool) {
 		for i := range uint8(9) {
 			if g.IsSmallGameWin(currSmallGameZone) {
 				continue
@@ -73,46 +70,114 @@ func (g *Game) GetNextValidMovesSeq() iter.Seq[NextMove] {
 	}
 }
 
-func (g *Game) getValidMovesInBoardZoneSeq(boardZone uint8) iter.Seq[NextMove] {
+func (g *Game) canPlayAnywhere(currSmallGameZone uint8) bool {
+	if currSmallGameZone == 9 || g.IsSmallGameWin(currSmallGameZone) {
+		return true
+	}
+
+	board := g.O.GetSmallBoard(currSmallGameZone) | g.X.GetSmallBoard(currSmallGameZone)
+	isFilled := (board & FilledBoard) == FilledBoard
+
+	return isFilled
+}
+
+func (g *Game) getValidMovesInBoardZoneSeq(boardZone uint8) iter.Seq[Move] {
 	smallBoard := g.X.GetSmallBoard(boardZone) | g.O.GetSmallBoard(boardZone)
 
 	// Get blank spaces
 	blanks := smallBoard ^ FilledBoard
 
 	// Play next moves
-	return func(yield func(NextMove) bool) {
+	return func(yield func(Move) bool) {
 		for i := range uint8(9) {
 			isBlank := ((blanks >> i) & 1) == 1
 			if !isBlank {
 				continue
 			}
 
-			if !yield(NextMove{BoardZone: boardZone, Position: i}) {
+			if !yield(Move{BoardZone: boardZone, Position: i}) {
 				return
 			}
 		}
 	}
 }
 
-func (g *Game) PlayMove(plyr *player.Player, boardZone, position uint8) {
+func (g *Game) PlayMove(boardZone, position uint8) {
+	plyr, _ := g.GetPlayers()
+
 	plyr.Play(boardZone, position)
+	if utils.CheckWin(uint16(plyr.GetSmallBoard(boardZone))) {
+		plyr.SetWinMetadata(boardZone)
+	}
+
 	g.UpdateNextGameZone(position)
 	g.ChangePlayer()
 }
 
-func (g *Game) Evaluation(plyr *player.Player, boardZone uint8) int {
+func (g *Game) Evaluate(move Move) int {
+	plyr, oppo := g.GetPlayers()
+
 	score := 0
 
-	// TODO: can check Partial Wins
-
-	// Check Wins
-	if plyr.IsSmallWin(boardZone) {
-		plyr.SetWinMetadata(boardZone)
-		if plyr.IsWin() {
-		}
+	//
+	// Big Win
+	//
+	// Check big win
+	plyrWinMetadata := plyr.GetWinMetadata()
+	oppoWinMetadata := oppo.GetWinMetadata()
+	if utils.CheckWin(plyrWinMetadata) {
+		score += bigWin
+	}
+	// If any big wins are possible
+	if wins := utils.PartialWins(plyrWinMetadata, oppoWinMetadata); wins > 0 {
+		score += bigPartialWin * wins
+	}
+	// If opponent can have big win
+	if wins := utils.PartialWins(oppoWinMetadata, plyrWinMetadata); wins > 0 {
+		score += bigOpponentWin * wins
 	}
 
+	//
+	// Small wins
+	//
+	// Check small win
+	plyrBoard := uint16(plyr.GetSmallBoard(move.BoardZone))
+	oppoBoard := uint16(oppo.GetSmallBoard(move.BoardZone))
+	if utils.CheckWin(plyrBoard) {
+		score += smallWin
+		score += moveScore(&move.BoardZone) * 5 // as big wins are also important
+	}
+	// If any small wins are possible
+	if wins := utils.PartialWins(plyrBoard, oppoBoard); wins > 0 {
+		score += smallPartialWin * wins
+	}
+	// If opponent can have small win
+	if wins := utils.PartialWins(oppoBoard, plyrBoard); wins > 0 {
+		score += smallOpponentWin * wins
+	}
+
+	// If opponent gets a free move
+	if g.canPlayAnywhere(move.BoardZone) {
+		score += sendOpponentToFreeBoard
+	}
+	// for center, corner or edge
+	score += moveScore(&move.Position)
+
 	return score
+}
+
+func moveScore(move *uint8) int {
+	// 0 1 2
+	// 3 4 5
+	// 6 7 8
+	switch *move {
+	case 4:
+		return center
+	case 0 | 2 | 6 | 8:
+		return corner
+	default:
+		return edge
+	}
 }
 
 func (g *Game) GetNextSmallGame() uint8 {

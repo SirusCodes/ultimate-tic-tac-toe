@@ -13,8 +13,8 @@ var winMasks = []uint16{
 	0b001010100, // anti
 }
 
-func PartialWins(player uint16, opponent uint16) uint8 {
-	var wins uint8 = 0
+func PartialWins(player uint16, opponent uint16) int {
+	wins := 0
 
 	for _, mask := range winMasks {
 		p := player & mask
