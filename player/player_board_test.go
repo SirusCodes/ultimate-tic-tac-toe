@@ -45,7 +45,7 @@ func TestGetSmallBoard(t *testing.T) {
 	for i, test := range tt {
 		player := getPlayerBoard(test.lo, test.hi)
 		if board := player.GetSmallBoard(test.boardZone); board != test.expected {
-			t.Fatalf("test failed for %+v (%d), expected: %b got: %b", player, i, test.expected, player.Hi)
+			t.Fatalf("test failed for %+v (%d), expected: %064b got: %064b", player, i, test.expected, player.Hi)
 		}
 	}
 }
@@ -92,7 +92,7 @@ func TestHasPlayed(t *testing.T) {
 	}
 }
 
-func TestPlaySmallBoard(t *testing.T) {
+func TestPlay(t *testing.T) {
 	tt := []struct {
 		lo         uint64
 		hi         uint64
@@ -131,11 +131,80 @@ func TestPlaySmallBoard(t *testing.T) {
 		player := getPlayerBoard(test.lo, test.hi)
 		player.Play(test.boardZone, test.position)
 		if player.Lo != test.expectedLo {
-			t.Fatalf("test failed for %+v (%d), expectedLo: %b got: %b", player, i, test.expectedLo, player.Lo)
+			t.Fatalf("test failed for %+v (%d), expectedLo: %064b got: %064b", player, i, test.expectedLo, player.Lo)
 		}
 
 		if player.Hi != test.expectedHi {
-			t.Fatalf("test failed for %+v (%d), expectedHi: %b got: %b", player, i, test.expectedHi, player.Hi)
+			t.Fatalf("test failed for %+v (%d), expectedHi: %064b got: %064b", player, i, test.expectedHi, player.Hi)
+		}
+	}
+}
+
+func TestPartialWins(t *testing.T) {
+	tt := []struct {
+		player   uint16
+		opponent uint16
+		answer   uint8
+	}{
+		{
+			player: 0b000000000,
+			answer: 0,
+		},
+		{
+			player: 0b001110000,
+			answer: 2,
+		},
+		{
+			player: 0b010010001,
+			answer: 2,
+		},
+		{
+			player: 0b010101010,
+			answer: 2,
+		},
+		{
+			player: 0b010101010,
+			answer: 2,
+		},
+		{
+			player:   0b010001010,
+			opponent: 0b000010000,
+			answer:   0,
+		},
+		{
+			player: 0b000100001,
+			answer: 0,
+		},
+		{
+			player: 0b010000100,
+			answer: 0,
+		},
+		{
+			player: 0b000000101,
+			answer: 1,
+		},
+		{
+			player: 0b001000001,
+			answer: 1,
+		},
+		{
+			player: 0b100000001,
+			answer: 1,
+		},
+		{
+			player: 0b001000100,
+			answer: 1,
+		},
+		{
+			player:   0b001000000,
+			opponent: 0b000000100,
+			answer:   0,
+		},
+	}
+
+	for i, test := range tt {
+		if val := player.PartialWins(uint64(test.player), uint64(test.opponent)); val != test.answer {
+			t.Fatalf("test failed for player(%016b) and opponent(%016b) (%d), expected: %v got: %v", test.player, test.opponent, i, test.answer, val)
 		}
 	}
 }
@@ -259,7 +328,7 @@ func TestCheckWin(t *testing.T) {
 
 	for _, test := range tt {
 		if val := player.CheckWin(uint64(test.test)); val != test.answer {
-			t.Fatalf("test failed for %b, expected: %v got: %v", test.test, test.answer, val)
+			t.Fatalf("test failed for %016b, expected: %v got: %v", test.test, test.answer, val)
 		}
 	}
 }
@@ -287,7 +356,7 @@ func TestSetWinMetadata(t *testing.T) {
 		player.SetWinMetadata(test.boardZone)
 
 		if player.Hi != test.expectedHi {
-			t.Fatalf("test failed for %+v (%d), expected: %b got: %b", player, i, test.expectedHi, player.Hi)
+			t.Fatalf("test failed for %+v (%d), expected: %064b got: %064b", player, i, test.expectedHi, player.Hi)
 		}
 	}
 }

@@ -12,14 +12,20 @@ const (
 	EmptyLowerBits    uint16 = 0b1111111000000000
 )
 
-type EvaluationScore int
-
 const (
-	_ EvaluationScore = iota
-	PartialSmallWin
-	SmallWin
-	PartialBigWin
-	BigWin
+	smallEdge               = .5
+	smallCorner             = 1
+	smallCenter             = 2
+	bigEdgeWin              = 3
+	smallPartialWin         = 4
+	sendOpponentToFreeBoard = -4
+	bigCornerWin            = 5
+	smallOpponentDefend     = 5
+	smallWin                = 8
+	bigCenter               = 10
+	bigPartialWin           = 50
+	bigOpponentDefend       = 60
+	bigWin                  = 1000
 )
 
 type Game struct {

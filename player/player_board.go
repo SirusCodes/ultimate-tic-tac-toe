@@ -1,8 +1,21 @@
 package player
 
+import "math/bits"
+
 const (
 	smallGameSize uint64 = 9
 )
+
+var winMasks = []uint16{
+	0b000000111, // row 0
+	0b000111000, // row 1
+	0b111000000, // row 2
+	0b001001001, // col 0
+	0b010010010, // col 1
+	0b100100100, // col 2
+	0b100010001, // diag
+	0b001010100, // anti
+}
 
 type Player struct {
 	Lo uint64
@@ -50,27 +63,30 @@ func (pb *Player) IsSmallWin(boardZone uint8) bool {
 	return CheckWin(pb.GetSmallBoard(boardZone))
 }
 
+func PartialWins(player uint64, opponent uint64) uint8 {
+	playerBoard := uint16(player) & 0b111111111
+	opponentBoard := uint16(opponent) & 0b111111111
+
+	var wins uint8 = 0
+
+	for _, mask := range winMasks {
+		p := playerBoard & mask
+		o := opponentBoard & mask
+
+		if o == 0 && bits.OnesCount16(p) == 2 {
+			wins++
+		}
+	}
+	return wins
+}
+
 func CheckWin(check uint64) bool {
 	toCheck := uint16(check) & 0b111111111
 
-	const (
-		row    uint16 = 0b111000000
-		col    uint16 = 0b100100100
-		ltToRb uint16 = 0b100010001
-		rtToLb uint16 = 0b001010100
-	)
-
-	for i := range 3 {
-		shiftedRow := (row >> (i * 3))
-		shiftedCol := (col >> i)
-
-		if (toCheck&shiftedRow) == shiftedRow || (toCheck&shiftedCol) == shiftedCol {
+	for _, mask := range winMasks {
+		if (toCheck & mask) == mask {
 			return true
 		}
-	}
-
-	if toCheck&ltToRb == ltToRb || toCheck&rtToLb == rtToLb {
-		return true
 	}
 
 	return false

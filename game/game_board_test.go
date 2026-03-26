@@ -136,7 +136,7 @@ func TestUpdateNextGameZone(t *testing.T) {
 	for i, test := range tt {
 		g := getGameWithMetadata(test.metadata)
 		if g.UpdateNextGameZone(test.boardZone); g.Metadata != test.expected {
-			t.Fatalf("next zones not updated (%d) expected: %b, got: %b", i, test.expected, g.Metadata)
+			t.Fatalf("next zones not updated (%d) expected: %016b, got: %016b", i, test.expected, g.Metadata)
 		}
 	}
 }
@@ -193,13 +193,13 @@ func TestChangePlayer(t *testing.T) {
 	g := getGame()
 
 	if val := g.Metadata >> game.NextPlayerMetaPos; val != 1 {
-		t.Fatalf("incorrect starting position, expected to be X's turn, got %b", val)
+		t.Fatalf("incorrect starting position, expected to be X's turn, got %016b", val)
 	}
 
 	g.ChangePlayer()
 
 	if val := g.Metadata >> game.NextPlayerMetaPos; val == 1 {
-		t.Fatalf("didn't change the metadata player property, expected: 0, got: %b", val)
+		t.Fatalf("didn't change the metadata player property, expected: 0, got: %016b", val)
 	}
 }
 
