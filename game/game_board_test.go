@@ -14,10 +14,10 @@ const xTurnMetadata uint16 = 1 << game.NextPlayerMetaPos
 func TestGetNextValidMovesSeq(t *testing.T) {
 	g := getGameWithMetadata(0)
 
-	g.PlayMove(0, 1)
-	g.PlayMove(0, 3)
-	g.PlayMove(0, 4)
-	g.PlayMove(0, 0)
+	g.PlayMove(game.Move{0, 1})
+	g.PlayMove(game.Move{0, 3})
+	g.PlayMove(game.Move{0, 4})
+	g.PlayMove(game.Move{0, 0})
 
 	moves := slices.Collect(g.GetNextValidMovesSeq())
 
@@ -40,14 +40,14 @@ func TestGetNextValidMovesSeq(t *testing.T) {
 	}
 
 	// Play a win condition and check if the win board is part of the next moves
-	g.PlayMove(0, 7)
+	g.PlayMove(game.Move{0, 7})
 	if !utils.CheckWin(uint16(g.O.GetSmallBoard(0))) {
 		t.Fatal("not win for O verify tests!")
 	}
 
 	g.O.SetWinMetadata(0)
 
-	g.PlayMove(7, 0)
+	g.PlayMove(game.Move{7, 0})
 
 	for move := range g.GetNextValidMovesSeq() {
 		if move.BoardZone == 0 {
@@ -68,7 +68,7 @@ func TestPlayMove(t *testing.T) {
 	for i, test := range tt {
 		g := getGameWithMetadata(0)
 
-		g.PlayMove(test.boardZone, test.position)
+		g.PlayMove(game.Move{test.boardZone, test.position})
 
 		if !g.O.HasPlayed(test.boardZone, test.position) {
 			t.Fatalf("didn't play the proper position for %d index", i)

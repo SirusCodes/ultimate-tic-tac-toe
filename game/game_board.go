@@ -102,15 +102,15 @@ func (g *Game) getValidMovesInBoardZoneSeq(boardZone uint8) iter.Seq[Move] {
 	}
 }
 
-func (g *Game) PlayMove(boardZone, position uint8) {
+func (g *Game) PlayMove(move Move) {
 	plyr, _ := g.GetPlayers()
 
-	plyr.Play(boardZone, position)
-	if utils.CheckWin(uint16(plyr.GetSmallBoard(boardZone))) {
-		plyr.SetWinMetadata(boardZone)
+	plyr.Play(move.BoardZone, move.Position)
+	if utils.CheckWin(uint16(plyr.GetSmallBoard(move.BoardZone))) {
+		plyr.SetWinMetadata(move.BoardZone)
 	}
 
-	g.UpdateNextGameZone(position)
+	g.UpdateNextGameZone(move.Position)
 	g.ChangePlayer()
 }
 
@@ -215,4 +215,12 @@ func (g *Game) GetPlayers() (plyr *player.Player, oppo *player.Player) {
 func (g *Game) ChangePlayer() {
 	const flipNextPlayer uint16 = 1 << NextPlayerMetaPos
 	g.Metadata ^= flipNextPlayer
+}
+
+func (g *Game) Clone() Game {
+	return Game{
+		X:        g.X.Clone(),
+		O:        g.O.Clone(),
+		Metadata: g.Metadata,
+	}
 }

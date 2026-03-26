@@ -53,3 +53,10 @@ func (pb *Player) SetWinMetadata(boardZone uint8) {
 func (pb *Player) GetWinMetadata() uint16 {
 	return uint16(pb.Hi >> (smallGameSize * 2))
 }
+
+func (p *Player) Clone() Player {
+	return Player{
+		Lo: p.Lo,
+		Hi: p.Hi,
+	}
+}
