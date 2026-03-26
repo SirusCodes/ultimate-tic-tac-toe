@@ -1,21 +1,10 @@
 package player
 
-import "math/bits"
+import "github.com/SirusCodes/9x9-analysis/utils"
 
 const (
 	smallGameSize uint64 = 9
 )
-
-var winMasks = []uint16{
-	0b000000111, // row 0
-	0b000111000, // row 1
-	0b111000000, // row 2
-	0b001001001, // col 0
-	0b010010010, // col 1
-	0b100100100, // col 2
-	0b100010001, // diag
-	0b001010100, // anti
-}
 
 type Player struct {
 	Lo uint64
@@ -60,42 +49,13 @@ func (pb *Player) Play(boardZone, position uint8) {
 }
 
 func (pb *Player) IsSmallWin(boardZone uint8) bool {
-	return CheckWin(pb.GetSmallBoard(boardZone))
-}
-
-func PartialWins(player uint64, opponent uint64) uint8 {
-	playerBoard := uint16(player) & 0b111111111
-	opponentBoard := uint16(opponent) & 0b111111111
-
-	var wins uint8 = 0
-
-	for _, mask := range winMasks {
-		p := playerBoard & mask
-		o := opponentBoard & mask
-
-		if o == 0 && bits.OnesCount16(p) == 2 {
-			wins++
-		}
-	}
-	return wins
-}
-
-func CheckWin(check uint64) bool {
-	toCheck := uint16(check) & 0b111111111
-
-	for _, mask := range winMasks {
-		if (toCheck & mask) == mask {
-			return true
-		}
-	}
-
-	return false
+	return utils.CheckWin(uint16(pb.GetSmallBoard(boardZone)))
 }
 
 func (pb *Player) IsWin() bool {
 	toCheck := pb.Hi >> (smallGameSize * 2)
 
-	return CheckWin(toCheck)
+	return utils.CheckWin(uint16(toCheck))
 }
 
 func (pb *Player) SetWinMetadata(boardZone uint8) {
