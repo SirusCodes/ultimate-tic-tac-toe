@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/SirusCodes/9x9-analysis/game"
@@ -13,11 +12,16 @@ type MoveScore struct {
 	Board    uint8
 	Position uint8
 	Score    int
+	Count    uint
 }
 
-const depth = 6
+type MovesResult struct {
+	StateChecks uint
+	AllMoves    []MoveScore
+	BestMove    MoveScore
+}
 
-func RunEngine(currentGame game.Game) {
+func RunEngine(currentGame game.Game, depth uint8) MovesResult {
 	wg := sync.WaitGroup{}
 	moveScoreChan := make(chan MoveScore)
 
@@ -25,11 +29,12 @@ func RunEngine(currentGame game.Game) {
 		wg.Go(func() {
 			game := currentGame.Clone()
 			game.PlayMove(move)
-			score := miniMax(game, move, depth, -inf, inf, false)
+			score, count := miniMax(game, move, depth, -inf, inf, false)
 			moveScoreChan <- MoveScore{
 				Score:    score,
 				Board:    move.BoardZone,
 				Position: move.Position,
+				Count:    count,
 			}
 		})
 	}
@@ -39,25 +44,30 @@ func RunEngine(currentGame game.Game) {
 		close(moveScoreChan)
 	}()
 
-	moves := make([]MoveScore, 9)
-	bestMove := MoveScore{
-		Score: -inf,
+	ans := MovesResult{
+		StateChecks: 0,
+		AllMoves:    []MoveScore{},
+		BestMove:    MoveScore{Score: -inf},
 	}
 
 	for result := range moveScoreChan {
-		if result.Score > bestMove.Score {
-			bestMove = result
+		if result.Score > ans.BestMove.Score {
+			ans.BestMove = result
 		}
-		moves = append(moves, result)
+		ans.AllMoves = append(ans.AllMoves, result)
+
+		ans.StateChecks += result.Count
 	}
 
-	fmt.Printf("best: %+v\n", bestMove)
+	return ans
 }
 
-func miniMax(game game.Game, move game.Move, depth uint8, alpha, beta int, maximizing bool) int {
+func miniMax(game game.Game, move game.Move, depth uint8, alpha, beta int, maximizing bool) (score int, count uint) {
 	if depth == 0 {
-		return game.Evaluate(move)
+		return game.Evaluate(move), 0
 	}
+
+	var totalCount uint = 0
 
 	if maximizing {
 		val := -inf
@@ -66,7 +76,8 @@ func miniMax(game game.Game, move game.Move, depth uint8, alpha, beta int, maxim
 			newGame := game.Clone()
 			newGame.PlayMove(m)
 
-			score := miniMax(newGame, move, depth-1, alpha, beta, !maximizing)
+			score, count := miniMax(newGame, m, depth-1, alpha, beta, !maximizing)
+			totalCount += count + 1
 
 			if score > val {
 				val = score
@@ -81,7 +92,7 @@ func miniMax(game game.Game, move game.Move, depth uint8, alpha, beta int, maxim
 			}
 		}
 
-		return val
+		return val, totalCount
 	} else {
 		val := inf
 
@@ -89,7 +100,8 @@ func miniMax(game game.Game, move game.Move, depth uint8, alpha, beta int, maxim
 			newGame := game.Clone()
 			newGame.PlayMove(m)
 
-			score := miniMax(newGame, move, depth-1, alpha, beta, !maximizing)
+			score, count := miniMax(newGame, m, depth-1, alpha, beta, !maximizing)
+			totalCount += count + 1
 
 			if score < val {
 				val = score
@@ -104,6 +116,6 @@ func miniMax(game game.Game, move game.Move, depth uint8, alpha, beta int, maxim
 			}
 		}
 
-		return val
+		return val, totalCount
 	}
 }
