@@ -12,8 +12,6 @@ func BenchmarkRunEngine_Depth10(b *testing.B) {
 	b.ReportAllocs()
 	depth := uint8(10)
 
-	b.ResetTimer()
-
 	for b.Loop() {
 		g := game.NewGame(player.NewPlayer(0, 0), player.NewPlayer(0, 0), 0)
 		engine.RunEngine(g, depth)
