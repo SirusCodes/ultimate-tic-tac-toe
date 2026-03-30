@@ -3,7 +3,7 @@ package engine
 import (
 	"sync"
 
-	"github.com/SirusCodes/9x9-analysis/game"
+	"github.com/SirusCodes/ultimate-tic-tac-toe/game"
 )
 
 const inf = 1_000_000

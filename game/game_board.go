@@ -3,8 +3,8 @@ package game
 import (
 	"iter"
 
-	"github.com/SirusCodes/9x9-analysis/player"
-	"github.com/SirusCodes/9x9-analysis/utils"
+	"github.com/SirusCodes/ultimate-tic-tac-toe/player"
+	"github.com/SirusCodes/ultimate-tic-tac-toe/utils"
 )
 
 const (

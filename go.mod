@@ -1,3 +1,3 @@
-module github.com/SirusCodes/9x9-analysis
+module github.com/SirusCodes/ultimate-tic-tac-toe
 
 go 1.26.1

@@ -3,7 +3,7 @@ package utils_test
 import (
 	"testing"
 
-	"github.com/SirusCodes/9x9-analysis/utils"
+	"github.com/SirusCodes/ultimate-tic-tac-toe/utils"
 )
 
 func TestPartialWins(t *testing.T) {

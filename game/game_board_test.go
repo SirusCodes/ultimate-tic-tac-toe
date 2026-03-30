@@ -4,9 +4,9 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/SirusCodes/9x9-analysis/game"
-	"github.com/SirusCodes/9x9-analysis/player"
-	"github.com/SirusCodes/9x9-analysis/utils"
+	"github.com/SirusCodes/ultimate-tic-tac-toe/game"
+	"github.com/SirusCodes/ultimate-tic-tac-toe/player"
+	"github.com/SirusCodes/ultimate-tic-tac-toe/utils"
 )
 
 const xTurnMetadata uint16 = 1 << game.NextPlayerMetaPos

@@ -3,7 +3,7 @@ package player_test
 import (
 	"testing"
 
-	"github.com/SirusCodes/9x9-analysis/player"
+	"github.com/SirusCodes/ultimate-tic-tac-toe/player"
 )
 
 func getPlayerBoard(lo, hi uint64) *player.Player {

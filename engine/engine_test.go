@@ -3,9 +3,9 @@ package engine_test
 import (
 	"testing"
 
-	"github.com/SirusCodes/9x9-analysis/engine"
-	"github.com/SirusCodes/9x9-analysis/game"
-	"github.com/SirusCodes/9x9-analysis/player"
+	"github.com/SirusCodes/ultimate-tic-tac-toe/engine"
+	"github.com/SirusCodes/ultimate-tic-tac-toe/game"
+	"github.com/SirusCodes/ultimate-tic-tac-toe/player"
 )
 
 func BenchmarkRunEngine_Depth10(b *testing.B) {
